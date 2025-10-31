@@ -1,263 +1,177 @@
-# Proyecto Integrador - Docker & Kubernetes
+# Proyecto Final - Docker & Kubernetes
 
-Aplicación full-stack progresiva que evoluciona clase a clase, desde una API REST simple hasta un sistema completo desplegado en Kubernetes con microservicios, base de datos, cache, frontend, Ingress y HPA.
+**Alumno:** Daniel Zerain Medinaceli
+**Fecha:** 31/10/2025
+**Curso:** Docker & Kubernetes - i-Quattro
 
-**Autor:** Alejandro Fiengo ([alefiengo.dev](https://alefiengo.dev))
-**Curso:** Docker & Kubernetes - Contenedores y Orquestación en la Práctica
-**Institución:** i-Quattro
+## Links de Docker Hub
+- Backend v2.1: https://hub.docker.com/r/danielzerain/springboot-api
+- Frontend v2.2: https://hub.docker.com/r/danielzerain/angular-frontend
 
----
+## Parte 1: Setup del Ambiente
 
-## Inicio Rápido
+**Ambiente utilizado:**
+- VirtualBox
 
-Elige tu plataforma de despliegue:
+- Nombre de VM/Instancia: danielz@microk8srv
 
-### Docker Compose (Clases 2-5)
-```bash
-cd docker-compose/
-docker compose up -d --build
-```
-**[Guía completa Docker Compose](docker-compose/README.md)**
+- Sistema operativo: Ubuntu  24.04.3 LTS
 
-### Kubernetes (Clases 6-8)
-```bash
-cd k8s/
-# Seguir guía de despliegue según tu cluster
-```
-**[Guía de Despliegue Kubernetes (minikube)](k8s/DEPLOYMENT_GUIDE.md)**
-**[Guía de Despliegue Kubernetes (microk8s)](k8s/DEPLOYMENT_GUIDE_MICROK8S.md)**
+- Recursos: 4GB RAM, 2 CPU cores
 
----
+- Red configurada: Bridged
 
-## Evolución del Proyecto
+- Rango MetalLB: 192.168.1.52-192.168.1.62
 
-| Versión | Tag | Stack | Qué se agrega |
-|---------|-----|-------|---------------|
-| **v1.0** | `v1.0-clase2` | Spring Boot | REST API in-memory con Dockerfile multi-stage |
-| **v1.1** | `v1.1-clase3` | + PostgreSQL | Persistencia con Spring Data JPA + Docker Compose |
-| **v1.2** | `v1.2-clase4` | + Redis + Angular + Kong | Cache, frontend SPA, API Gateway |
-| **v1.3** | `v1.3-clase5` | + Seguridad | Trivy scan, optimizaciones, non-root users |
-| **v2.0** | `v2.0-clases6-7-8` | **Migración completa a Kubernetes** | Deployments, Services, ConfigMaps, Secrets, StatefulSet, Ingress, HPA |
+  ------
 
----
+  > Estado servidor y Microk8s
 
-## Arquitectura
+![microk8s status](screenshots/parte1_configuracion.png)
 
-### Docker Compose (v1.2 - v1.3)
+  > Estado despliege
 
-```
-Cliente → Angular :4200 → Kong :8000 → Spring Boot :8080
-                                              |
-                                              +-- Redis :6379
-                                              +-- PostgreSQL :5432
-```
+![pods status](screenshots/parte1_deploy.png)
 
-**[Ver arquitectura detallada Docker Compose](ARCHITECTURE.md#arquitectura-docker-compose-v12)**
+  > Estado de los pods
 
-### Kubernetes (v2.0)
+![pods status](screenshots/parte1_pods.png)
 
-```
-Cliente → Ingress :80 → Frontend Pods (nginx BFF)
-                   |         |
-                   |         +-- /api/* → API Pods (2-5 HPA)
-                   |                           |
-                   +-- /api/* → API Service    +-- Redis
-                                               +-- PostgreSQL (StatefulSet + PVC)
-```
+  > Acceso WEB por Clusted IP
 
-**[Ver arquitectura detallada Kubernetes](ARCHITECTURE.md#arquitectura-kubernetes-v20)**
+![pods status](screenshots/parte1_web.png)
 
----
+## Parte 2: Backend v2.1
 
-## Stack Tecnológico
+Se realizaron cambios en el endpoint api/info, se reemplazo informacion del proyecto, una vez realizados los cambios se genero una nueva imagen, la misma fue cargada a [DockerHub](https://hub.docker.com/r/danielzerain/springboot-api) para realizar el despliegue correspondiente.
 
-### Backend
-- **Spring Boot** 3.5.6 (Java 17)
-- **PostgreSQL** 15 (base de datos)
-- **Redis** 7 (cache)
-- **Spring Data JPA** (ORM)
-- **Spring Cache** (abstraction)
-- **Spring Actuator** (metrics/health)
+  > Cambios en el codigo
 
-### Frontend
-- **Angular** 17+
-- **nginx** (servidor + BFF proxy)
+![modificacion](screenshots/parte2_modificacion.png)
 
-### Infraestructura
+  > rollout
 
-#### Docker Compose
-- **Kong** 3.4 (API Gateway)
-- **Docker Compose** (orquestación)
-- Multi-stage builds
-- Non-root users
+![modificacion](screenshots/parte2_rollout_ini.png)
 
-#### Kubernetes
-- **Deployments** + **Services**
-- **StatefulSet** (PostgreSQL con persistencia)
-- **ConfigMaps** + **Secrets**
-- **NGINX Ingress** (routing HTTP)
-- **HPA** (Horizontal Pod Autoscaler)
-- **Health Probes** (liveness, readiness, startup)
-- **BFF Pattern** (nginx proxy en frontend)
 
----
+![modificacion](screenshots/parte2_rollout_fin.png)
 
-## Endpoints de la API
+  > Evidencia de cambios realizados
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/` | Página de bienvenida |
-| GET | `/api/greeting` | Mensaje de saludo |
-| GET | `/api/info` | Información de la aplicación |
-| GET | `/api/users` | Listar usuarios (con cache) |
-| GET | `/api/users/{id}` | Obtener usuario por ID |
-| POST | `/api/users` | Crear usuario |
-| PUT | `/api/users/{id}` | Actualizar usuario |
-| DELETE | `/api/users/{id}` | Eliminar usuario |
-| GET | `/actuator/health` | Health check |
-| GET | `/actuator/health/liveness` | Liveness probe (K8s) |
-| GET | `/actuator/health/readiness` | Readiness probe (K8s) |
+*Antes*
 
----
+![modificacion](screenshots/parte2_sincambios.png)
 
-## Documentación
+*Con cambios*
 
-### Guías de Despliegue
-- **[Docker Compose](docker-compose/README.md)** - Despliegue con Docker Compose (v1.2-v1.3)
-- **[Kubernetes (minikube)](k8s/DEPLOYMENT_GUIDE.md)** - Guía paso a paso para minikube
-- **[Kubernetes (microk8s)](k8s/DEPLOYMENT_GUIDE_MICROK8S.md)** - Guía paso a paso para microk8s
+![modificacion](screenshots/parte2_concambios.png)
 
-### Documentación Técnica
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Diagramas de arquitectura, flujos de datos y decisiones de diseño
-- **[SECURITY.md](SECURITY.md)** - Buenas prácticas de seguridad y escaneo con Trivy (v1.3)
+## Parte 3: Frontend v2.2
 
----
+Se realizaron cambios en el frontend, se adiciona la funcionalidad para el consumo del endpoint api/info, una vez realizados los cambios se genero una nueva imagen con la version 2.2, la misma fue cargada a [DockerHub](https://hub.docker.com/r/danielzerain/angular-frontend) para realizar el despliegue correspondiente.
 
-## Trabajar con Tags
+  > rollout
 
-Este proyecto usa tags de Git para cada versión del curso:
+![modificacion](screenshots/parte3_rollout.png)
+
+  > Cambios realizados
+
+![modificacion](screenshots/parte3_cambios1.png)
+
+![modificacion](screenshots/parte3_cambios2.png)
+
+![modificacion](screenshots/parte3_cambios3.png)
+
+![modificacion](screenshots/parte3_cambios4.png)
+
+  > Cambios aplicado
+
+Se implementa el consumo del cambio en el servicio de api/info
+
+![modificacion](screenshots/parte3_webactual.png)
+
+## Parte 4: Gestion de Versiones
+
+### ¿Qué hace kubectl rollout undo?
+
+El comando kubectl rollout undo se utiliza para revertir una implementación a una versión anterior.
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/alefiengo/proyecto-integrador-docker-k8s.git
-cd proyecto-integrador-docker-k8s
-
-# Ver todas las versiones disponibles
-git tag
-
-# Checkout a una versión específica
-git checkout v1.0-clase2    # Versión básica (Clase 2)
-git checkout v1.1-clase3    # Con PostgreSQL (Clase 3)
-git checkout v1.2-clase4    # Con Redis, Angular, Kong (Clase 4)
-git checkout v1.3-clase5    # Con seguridad (Clase 5)
-git checkout v2.0-clases6-7-8  # Kubernetes completo (Clases 6-8)
-
-# Comparar cambios entre versiones
-git diff v1.2-clase4 v1.3-clase5
+kubectl rollout undo deployment/api -n proyecto-integrador
 ```
 
----
+![rollout undo](screenshots/parte4_rollout_undo.png)
 
-## Verificación Rápida
-
-### Docker Compose
-```bash
-# Levantar servicios
-cd docker-compose/
-docker compose up -d
-
-# Verificar que todo funciona
-curl http://localhost:8000/api/users  # Via Kong
-curl http://localhost:4200            # Frontend
-
-# Ver logs
-docker compose logs -f app
-```
-
-### Kubernetes
-```bash
-# Desplegar
-cd k8s/
-kubectl apply -f 00-namespace/
-kubectl apply -f 01-configmaps/
-kubectl apply -f 02-secrets/
-# ... (ver guía completa)
-
-# Verificar
-kubectl get all -n proyecto-integrador
-
-# Port-forward para acceder
-kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
-
-# Acceder
-curl http://localhost:8080/api/users
-curl http://localhost:8080/           # Frontend
-```
-
----
-
-## Desarrollo
-
-### Requisitos Previos
-
-- **Docker** Desktop o Docker Engine
-- **Docker Compose** v2
-- **Java** 17+
-- **Maven** 3.9+
-- **Node.js** 18+ (para Angular)
-
-### Kubernetes (adicional)
-- **minikube** o **microk8s** o cluster cloud
-- **kubectl**
-- **Helm** 3+ (opcional)
-
-### Construir Imágenes
+Para ver el historial de las versiones
 
 ```bash
-# Backend
-docker build -t alefiengo/springboot-api:v2.0 .
-
-# Frontend
-docker build -t alefiengo/angular-frontend:v2.0 ./frontend/
-
-# Publicar a Docker Hub (opcional)
-docker login
-docker push alefiengo/springboot-api:v2.0
-docker push alefiengo/angular-frontend:v2.0
+kubectl rollout history deployment/api -n proyecto-integrador
 ```
 
----
+Para volver a desplegar de nuevo a la nueva version
 
-## 🤝 Contribuir
+```bash
+kubectl rollout undo deployment/api --to-revision=2 -n proyecto-integrador
+```
 
-Este es un proyecto educativo para el curso de Docker & Kubernetes. Si encuentras errores o mejoras:
+![rollout undo](screenshots/parte4_rollout_history.png)
 
-1. Haz fork del proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/mejora`)
-3. Commit tus cambios (`git commit -m 'feat: agregar mejora'`)
-4. Push a la rama (`git push origin feature/mejora`)
-5. Abre un Pull Request
+## Parte 5: Ingress + MetalLB
 
----
+```bash
+kubectl get ingress -n proyecto-integrador
+```
 
-## 📝 Licencia
+![rollout undo](screenshots/parte5_ingress.png)
 
-Este proyecto es material educativo desarrollado por Alejandro Fiengo para el curso de Docker & Kubernetes en i-Quattro.
+Para ver las direcciones asignadas a metallb se ejecuta el siguiente comando
 
----
+```bash
+kubectl get describe ipaddresspool default-addresspool -m metallb-system
+```
 
-## 📞 Contacto
+![rollout undo](screenshots/parte5_confiLB.png)
 
-- **Autor:** Alejandro Fiengo
-- **Website:** [alefiengo.dev](https://alefiengo.dev)
-- **GitHub:** [@alefiengo](https://github.com/alefiengo)
-- **Curso:** Docker & Kubernetes - i-Quattro
+Para utilizar metallb se cambio el servicio a ClusterIP
 
----
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: proyecto-integrador
+  labels:
+    app: api
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
 
-## Recursos
+```
 
-- [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/)
-- [Docker Documentation](https://docs.docker.com/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [Angular Documentation](https://angular.io/docs)
+Con este cambio se pudo utilizar el acceso en el rango de IP asignadas a metalLB
+
+![rollout undo](screenshots/parte5_svc.png)
+
+![rollout undo](screenshots/parte5_acceso.png)
+
+
+## Conclusiones
+
+### Aprendizajes principales
+- Utilizacion de Kubernetes para despliegues que permitan ser escalados, desplegados en pocos pasos
+- Volver a versiones anteriores antes posibles problemas en los despliegues 
+- Organizacion de los manifiestos de despliegues
+
+### Dificultades encontradas
+- Se tuvo dificultad con al cantidad de procesadores asignados a la maquina virtual, lo que no permitia iniciar los pods del backend
+
+
+### Reflexión
+Aplicar Kubernetes en un proyecto real implica usarlo como plataforma para orquestar, escalar y mantener servicios backend, Frontend de forma confiable. Se tiene que tener una buena aplicacion de los manifiestos para realizar un correcto despliegue
